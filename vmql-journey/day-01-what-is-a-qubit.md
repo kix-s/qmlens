@@ -13,7 +13,7 @@ be in a *blend* of 0 and 1 at the same time. We call that blend a
 **superposition**. The moment you look at it (we'll call that
 "measurement" tomorrow), it snaps to either 0 or 1.
 
-Important: a qubit is **not** "secretly 0 or 1 and we just don't know
+**Important:** a qubit is **not** "secretly 0 or 1 and we just don't know
 which." It's genuinely in a blend until measured. That's the weird part —
 and the part that makes quantum computers different.
 
