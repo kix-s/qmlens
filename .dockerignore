@@ -1,0 +1,8 @@
+# Ignore local dev artifacts so they don't get baked into the image.
+**/node_modules
+**/.venv
+**/__pycache__
+**/*.pyc
+**/.git
+**/dist
+**/.vite
