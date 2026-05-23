@@ -1,14 +1,12 @@
 # QMLens — Quantum ML Visualizer (Prototype 1)
 
-First prototype of the QMLens / vqml plan. A 2–4 qubit variational quantum
-classifier is trained on the two-moons dataset and streamed to a React UI
-that renders four MVP views:
+First prototype of the QMLens. A 2–4 qubit variational quantum classifier is trained on the two-moons dataset and streamed to a React UI that renders four views:
 
 1. **Circuit View** — gates colored by type, trainable rotations tinted by
    gradient magnitude, current parameter shown under each rotation.
 2. **Training Timeline** — loss, train/test accuracy, gradient norm.
 3. **Entanglement Graph** — qubits arranged on a ring, edges weighted by
-   |Cov(Z_i, Z_j)|, node color = ⟨Z_i⟩.
+   $|Cov(Z_i, Z_j)|$, node color = $⟨Z_i⟩$.
 4. **Parameter Heatmap** — rows = (layer, RY/RZ), cols = qubit.
 
 A timeline slider scrubs through epochs; "follow latest" keeps the UI live
@@ -17,7 +15,7 @@ during training.
 ## Stack
 
 - Backend: Python · FastAPI · PennyLane (`default.qubit`) · scikit-learn
-- Frontend: React 18 · Vite · plain SVG (no heavy chart deps)
+- Frontend: React 18 · Vite · plain SVG
 - Data: per-epoch JSON snapshots (`loss`, `parameters`, `gradients`,
   `qubit_correlations`, `measurements`, accuracies)
 
@@ -100,7 +98,7 @@ frontend/
   src/views/{LossChart,CircuitView,EntanglementGraph,ParameterHeatmap}.jsx
 ```
 
-## Next steps (per plan)
+## Coming soon
 
 - Measurement-attribution view (parameter-shift sensitivity per gate).
 - State-projection view (PCA/UMAP of pre-measurement states).
