@@ -37,7 +37,20 @@ during training.
 
 ## Run
 
-### With Docker Compose (recommended)
+### Prebuilt combined container (quickest)
+
+A single image that bundles the frontend and backend is published to GHCR on
+every release:
+
+```bash
+docker run --rm -p 8000:8000 ghcr.io/kix-s/qmlens:latest
+# UI + API: http://localhost:8000
+# Docs:     http://localhost:8000/docs
+```
+
+Pin to a specific release with a tag (e.g. `ghcr.io/kix-s/qmlens:v0.1.0`).
+
+### With Docker Compose (recommended for dev)
 
 ```bash
 docker compose up --build

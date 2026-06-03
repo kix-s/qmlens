@@ -102,6 +102,23 @@ def make_zz_qnode(spec: CircuitSpec):
     return circuit, pairs
 
 
+def make_state_qnode(spec: CircuitSpec):
+    """QNode returning the full state vector.
+
+    Used to compute information-theoretic correlation metrics (mutual
+    information, concurrence) from reduced density matrices. Only viable
+    for small simulators (the size is 2**n_qubits).
+    """
+    dev = make_device(spec)
+
+    @qml.qnode(dev, interface="autograd")
+    def circuit(weights, x):
+        _ansatz(weights, x, spec)
+        return qml.state()
+
+    return circuit
+
+
 def circuit_layout(spec: CircuitSpec) -> List[dict]:
     """Static description of the circuit for the frontend Circuit View.
 

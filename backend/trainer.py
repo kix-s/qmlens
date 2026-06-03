@@ -13,6 +13,7 @@ from .circuit import (
     circuit_layout,
     make_all_z_qnode,
     make_qnode,
+    make_state_qnode,
     make_zz_qnode,
 )
 from .scenarios import Scenario, get_scenario
@@ -86,6 +87,82 @@ def _qubit_correlation_matrix(zz_fn, z_fn, weights, X_sub, spec, pairs):
     return out, z_avg
 
 
+# --- Information-theoretic correlation metrics ---------------------------------------
+# These are computed from the simulator's full state vector. They are
+# meaningful only for the (small) `default.qubit` simulator we use here.
+
+_SIGMA_Y = np.array([[0, -1j], [1j, 0]], dtype=complex)
+_YY = np.kron(_SIGMA_Y, _SIGMA_Y)
+
+
+def _reduced_dm(psi: np.ndarray, keep: List[int], n: int) -> np.ndarray:
+    """Partial trace of |psi><psi| over wires NOT in `keep`.
+
+    PennyLane's default.qubit returns the state with wire 0 as the most
+    significant index, matching ``reshape([2]*n)``.
+    """
+    psi_t = np.asarray(psi, dtype=complex).reshape([2] * n)
+    # Build einsum: psi over indices a0..a_{n-1}, conj(psi) shares the
+    # traced indices and gets fresh labels on kept ones.
+    in1 = list(range(n))
+    in2 = list(range(n))
+    next_label = n
+    keep_set = set(keep)
+    for i in range(n):
+        if i in keep_set:
+            in2[i] = next_label
+            next_label += 1
+    out_axes = [in1[i] for i in keep] + [in2[i] for i in keep]
+    rho = np.einsum(psi_t, in1, np.conj(psi_t), in2, out_axes)
+    d = 2 ** len(keep)
+    return rho.reshape(d, d)
+
+
+def _von_neumann_entropy(rho: np.ndarray) -> float:
+    """S(rho) in bits. Clamps tiny / negative eigenvalues from numerical noise."""
+    evals = np.linalg.eigvalsh(rho)
+    evals = np.clip(np.real(evals), 1e-12, 1.0)
+    return float(-np.sum(evals * np.log2(evals)))
+
+
+def _concurrence(rho_ij: np.ndarray) -> float:
+    """Wootters concurrence of a two-qubit density matrix."""
+    rho_tilde = _YY @ np.conj(rho_ij) @ _YY
+    # Eigenvalues of rho * rho_tilde are non-negative real (in theory).
+    evals = np.linalg.eigvals(rho_ij @ rho_tilde)
+    evals = np.sort(np.clip(np.real(evals), 0.0, None))[::-1]
+    sqrts = np.sqrt(evals)
+    return float(max(0.0, sqrts[0] - sqrts[1] - sqrts[2] - sqrts[3]))
+
+
+def _info_metrics(state_fn, weights, X_sub, n_qubits: int):
+    """Average per-pair mutual information (bits) and concurrence.
+
+    Computed per sample then averaged, which is more meaningful than
+    averaging the density matrices first.
+    """
+    pairs = [(i, j) for i in range(n_qubits) for j in range(i + 1, n_qubits)]
+    mi = np.zeros((n_qubits, n_qubits), dtype=float)
+    conc = np.zeros((n_qubits, n_qubits), dtype=float)
+    count = 0
+    for x in X_sub:
+        psi = np.asarray(state_fn(weights, x), dtype=complex)
+        single_rhos = [_reduced_dm(psi, [i], n_qubits) for i in range(n_qubits)]
+        single_S = [_von_neumann_entropy(r) for r in single_rhos]
+        for i, j in pairs:
+            rho_ij = _reduced_dm(psi, [i, j], n_qubits)
+            s_ij = _von_neumann_entropy(rho_ij)
+            mi_val = max(0.0, single_S[i] + single_S[j] - s_ij)
+            c_val = _concurrence(rho_ij)
+            mi[i, j] += mi_val
+            mi[j, i] = mi[i, j]
+            conc[i, j] += c_val
+            conc[j, i] = conc[i, j]
+        count += 1
+    c = max(count, 1)
+    return mi / c, conc / c
+
+
 def run_training(
     cfg: TrainConfig,
     on_snapshot: Optional[Callable[[Dict], None]] = None,
@@ -110,6 +187,7 @@ def run_training(
     qnode = make_qnode(spec)
     z_qnode = make_all_z_qnode(spec)
     zz_qnode, pairs = make_zz_qnode(spec)
+    state_qnode = make_state_qnode(spec)
 
     shape = spec.param_shape()
     weights = pnp.array(
@@ -142,6 +220,7 @@ def run_training(
         corr, z_avg = _qubit_correlation_matrix(
             zz_qnode, z_qnode, weights, X_sub, spec, pairs
         )
+        mi, conc = _info_metrics(state_qnode, weights, X_sub, spec.n_qubits)
         train_acc = _accuracy(predict, Xtr, ytr)
         test_acc = _accuracy(predict, Xte, yte)
         snap = {
@@ -153,6 +232,8 @@ def run_training(
             "gradients": np.asarray(grads_w).tolist(),
             "grad_norm": float(np.linalg.norm(np.asarray(grads_w))),
             "qubit_correlations": corr.tolist(),
+            "qubit_mutual_information": mi.tolist(),
+            "qubit_concurrence": conc.tolist(),
             "measurements": {f"q{i}": float(z_avg[i]) for i in range(spec.n_qubits)},
             "output_scale": float(scale),
             "output_scale_grad": float(grad_s),

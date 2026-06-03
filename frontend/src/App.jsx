@@ -189,7 +189,7 @@ export default function App() {
           <LossChart snapshots={snapshots} epochIdx={epochIdx} />
         </Panel>
 
-        <Panel title="Entanglement Graph" subtitle="nodes = qubits · edge width = |Cov(Z_i, Z_j)|">
+        <Panel title="Qubit Correlation Graph" subtitle="nodes = qubits · edge width = |Cov(Z_i, Z_j)|">
           <EntanglementGraph snapshot={current} nQubits={run?.n_qubits ?? cfg.n_qubits} />
         </Panel>
 

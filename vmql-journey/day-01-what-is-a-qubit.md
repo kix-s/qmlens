@@ -38,7 +38,7 @@ up to 1).
 
 A qubit's state is written:
 
-$$|\psi\rangle = \alpha\,|0\rangle + \beta\,|1\rangle$$
+$$|\psi\rangle = \alpha|0\rangle + \beta|1\rangle$$
 
 The funny brackets `|·⟩` ("ket") just mean "this is a quantum state."
 Don't be intimidated — it's notation, not magic. When measured:
