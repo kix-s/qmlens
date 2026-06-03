@@ -12,6 +12,8 @@ First prototype of the QMLens. A 2–4 qubit variational quantum classifier is t
 A timeline slider scrubs through epochs; "follow latest" keeps the UI live
 during training.
 
+![QMLens](./images/qmlens.png)
+
 ## Stack
 
 - Backend: Python · FastAPI · PennyLane (`default.qubit`) · scikit-learn
