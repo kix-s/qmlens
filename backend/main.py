@@ -44,7 +44,7 @@ class TrainRequest(BaseModel):
 
 @app.get("/api/health")
 def health():
-    return {"status": "ok"}
+    return {"status": "ok", "version": os.environ.get("QMLENS_VERSION", "dev")}
 
 
 @app.get("/api/scenarios")

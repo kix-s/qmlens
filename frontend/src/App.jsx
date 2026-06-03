@@ -113,6 +113,18 @@ export default function App() {
       <header className="topbar">
         <h1>
           <span>QMLens</span> · Quantum ML Visualizer
+          <span
+            style={{
+              marginLeft: 10,
+              fontSize: 11,
+              fontWeight: 400,
+              color: '#8b94b8',
+              letterSpacing: 0.3,
+            }}
+            title="App version"
+          >
+            v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'dev'}
+          </span>
         </h1>
         <div className="controls">
           <label className="scenario-select">

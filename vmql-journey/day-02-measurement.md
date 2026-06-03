@@ -114,6 +114,50 @@ changes affect the qubit states and therefore change the measurement
 statistics — and the arrow tilts accordingly. We will learn how those
 operations work starting on Day 3.
 
+## Big picture: how quantum ML actually works
+
+Before we dive into specific gates, here's the **whole training loop in
+one paragraph** so the rest of the visualization makes sense:
+
+1. **Encode the input.** A classical data point (e.g. a 2D coordinate)
+   is turned into a qubit rotation — that's the green column you'll see
+   on the left of the Circuit View. Different inputs → different
+   starting qubit states. *(Day 7.)*
+2. **Transform with trainable rotations.** A stack of `Ry` / `Rz`
+   rotations (the blue boxes) and entangling gates (the purple lines
+   between wires) shuffles the qubits' state around. These rotation
+   angles are the model's **weights** — there is nothing else to learn.
+   *(Days 3, 8.)*
+3. **Measure.** Read `⟨Z₀⟩` off the first qubit (the yellow `M` box).
+   This single number in `[−1, +1]` is the model's prediction:
+   positive → class A, negative → class B. *(Today.)*
+4. **Score and adjust.** Compare the prediction to the true label,
+   compute a loss, then nudge every rotation angle slightly in the
+   direction that lowers the loss. *(Days 9, 10.)*
+5. **Repeat** for many data points and many epochs. The angles drift
+   into a configuration that maps "class A inputs" to `⟨Z₀⟩ ≈ +1` and
+   "class B inputs" to `⟨Z₀⟩ ≈ −1`. *(Day 11.)*
+
+So a quantum ML model isn't really "thinking" in any exotic way — it's
+the same loop as a tiny neural net:
+
+| Neural network        | Variational quantum circuit |
+|-----------------------|-----------------------------|
+| Numbers in            | Qubit rotations in          |
+| Multiply by weights   | Apply rotations by angles `θ` |
+| Activation + layers   | More rotations + entanglers |
+| Read output neuron    | Measure `⟨Z₀⟩`              |
+| Adjust weights        | Adjust the angles `θ`       |
+
+What makes it *quantum* is the middle part: the qubits can be in
+superposition and become entangled while the rotations are happening,
+which lets a small circuit express decision boundaries that would
+require many more classical parameters. We'll start to see hints of
+this from Day 4 (multi-qubits) and Day 5 (entanglement) onward.
+
+For now, every Circuit View panel in QMLens is showing you exactly this
+pipeline, left-to-right: **encode → rotate → entangle → measure**.
+
 ## Checkpoint
 
 1. If `⟨Z⟩ = 0`, what is the probability of measuring `1`?

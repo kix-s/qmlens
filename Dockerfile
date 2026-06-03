@@ -2,6 +2,10 @@
 # Stage 1: build the frontend bundle.
 FROM node:20-alpine AS frontend-build
 WORKDIR /app
+# Build-time version (typically the git tag, e.g. "v0.1.0"). Baked into
+# the JS bundle so the UI's displayed version matches the image tag.
+ARG APP_VERSION=dev
+ENV VITE_APP_VERSION=$APP_VERSION
 COPY frontend/package.json frontend/package-lock.json* ./
 RUN npm install
 COPY frontend/ ./
@@ -10,10 +14,12 @@ RUN npm run build
 # Stage 2: backend runtime + static assets from stage 1.
 FROM python:3.11-slim AS runtime
 
+ARG APP_VERSION=dev
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
-    QMLENS_STATIC_DIR=/app/frontend_dist
+    QMLENS_STATIC_DIR=/app/frontend_dist \
+    QMLENS_VERSION=$APP_VERSION
 
 WORKDIR /app
 
