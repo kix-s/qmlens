@@ -112,6 +112,23 @@ main.grid {
   overflow: hidden;
 }
 
+/* Stack panels vertically on narrow viewports so each one stays usable. */
+@media (max-width: 1100px) {
+  main.grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(4, minmax(260px, 1fr));
+    overflow: auto;
+  }
+}
+
+/* On short viewports, also let the grid scroll instead of squishing. */
+@media (max-height: 700px) {
+  main.grid {
+    grid-auto-rows: minmax(260px, 1fr);
+    overflow: auto;
+  }
+}
+
 .panel {
   background: var(--panel);
   border: 1px solid #1f2a55;
@@ -120,6 +137,9 @@ main.grid {
   display: flex;
   flex-direction: column;
   min-height: 0;
+  /* Allow grid/flex item to shrink below its content's intrinsic width. */
+  min-width: 0;
+  overflow: hidden;
 }
 
 .panel h2 {
@@ -135,7 +155,9 @@ main.grid {
 .panel .body {
   flex: 1;
   min-height: 0;
+  min-width: 0;
   position: relative;
+  overflow: hidden;
 }
 
 .legend {

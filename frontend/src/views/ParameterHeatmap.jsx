@@ -45,21 +45,49 @@ export default function ParameterHeatmap({ snapshot }) {
     );
   }
 
-  const padding = { l: 50, r: 16, t: 18, b: 22 };
-  const W = size.w;
-  const H = size.h;
-  const cellW = (W - padding.l - padding.r) / cols;
-  const cellH = (H - padding.t - padding.b) / rows.length;
+  // Constants for the grid itself. We render the heatmap at its natural
+  // size and let CSS flexbox center it inside the panel — much simpler than
+  // computing centered SVG coordinates against the full panel width.
+  const MAX_CELL_W = 56;
+  const MAX_CELL_H = 28;
+  const MIN_CELL_W = 28;
+  const MIN_CELL_H = 18;
+  const LABEL_GUTTER = 50;
+  const TOP_PAD = 18;
+  const BOTTOM_PAD = 22;
+  const RIGHT_PAD = 12;
+
+  // Shrink cells if the panel is smaller than the natural grid size.
+  const availW = Math.max(0, size.w - LABEL_GUTTER - RIGHT_PAD);
+  const availH = Math.max(0, size.h - TOP_PAD - BOTTOM_PAD);
+  const cellW = Math.max(MIN_CELL_W, Math.min(MAX_CELL_W, availW / Math.max(cols, 1)));
+  const cellH = Math.max(MIN_CELL_H, Math.min(MAX_CELL_H, availH / Math.max(rows.length, 1)));
+  const gridW = cellW * cols;
+  const gridH = cellH * rows.length;
+  const svgW = LABEL_GUTTER + gridW + RIGHT_PAD;
+  const svgH = TOP_PAD + gridH + BOTTOM_PAD;
+  const gridX = LABEL_GUTTER;
+  const gridY = TOP_PAD;
 
   return (
-    <div ref={wrapRef} style={{ width: '100%', height: '100%' }}>
-      <svg width={W} height={H} style={{ display: 'block' }}>
+    <div
+      ref={wrapRef}
+      style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        overflow: 'hidden',
+      }}
+    >
+      <svg width={svgW} height={svgH} style={{ display: 'block' }}>
         {/* column headers */}
         {Array.from({ length: cols }).map((_, q) => (
           <text
             key={q}
-            x={padding.l + cellW * (q + 0.5)}
-            y={padding.t - 4}
+            x={gridX + cellW * (q + 0.5)}
+            y={gridY - 4}
             fontSize="10"
             fill="#8b94b8"
             textAnchor="middle"
@@ -70,8 +98,8 @@ export default function ParameterHeatmap({ snapshot }) {
         {rows.map((row, ri) => (
           <g key={ri}>
             <text
-              x={padding.l - 6}
-              y={padding.t + cellH * (ri + 0.5) + 3}
+              x={gridX - 6}
+              y={gridY + cellH * (ri + 0.5) + 3}
               fontSize="10"
               fill="#8b94b8"
               textAnchor="end"
@@ -84,16 +112,16 @@ export default function ParameterHeatmap({ snapshot }) {
               return (
                 <g key={q}>
                   <rect
-                    x={padding.l + cellW * q + 1}
-                    y={padding.t + cellH * ri + 1}
+                    x={gridX + cellW * q + 1}
+                    y={gridY + cellH * ri + 1}
                     width={cellW - 2}
                     height={cellH - 2}
                     fill={fill}
                     rx={2}
                   />
                   <text
-                    x={padding.l + cellW * (q + 0.5)}
-                    y={padding.t + cellH * (ri + 0.5) + 3}
+                    x={gridX + cellW * (q + 0.5)}
+                    y={gridY + cellH * (ri + 0.5) + 3}
                     fontSize="9"
                     fill="#0b1020"
                     textAnchor="middle"
@@ -105,7 +133,7 @@ export default function ParameterHeatmap({ snapshot }) {
             })}
           </g>
         ))}
-        <text x={padding.l} y={H - 6} fontSize="10" fill="#8b94b8">
+        <text x={svgW / 2} y={svgH - 6} fontSize="10" fill="#8b94b8" textAnchor="middle">
           color: blue = negative · red = positive · normalized to max |θ| = {maxAbs.toFixed(2)}
         </text>
       </svg>
