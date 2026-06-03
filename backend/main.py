@@ -1,12 +1,16 @@
 """FastAPI server exposing training runs and snapshots for the QMLens UI."""
 from __future__ import annotations
 
+import os
 import threading
 import uuid
+from pathlib import Path
 from typing import Dict, Optional
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from .trainer import TrainConfig, TrainState, run_training
@@ -146,3 +150,34 @@ if __name__ == "__main__":  # pragma: no cover
     import uvicorn
 
     uvicorn.run("backend.main:app", host="0.0.0.0", port=8000, reload=False)
+
+
+# --- Static frontend (combined image) ------------------------------------------------
+# When the bundled UI is present (set by the combined Dockerfile via
+# QMLENS_STATIC_DIR, defaulting to /app/frontend_dist), serve it from the same
+# process so a single container ships both the API and the UI. This block is a
+# no-op in dev where the directory does not exist.
+_static_dir = Path(os.environ.get("QMLENS_STATIC_DIR", "/app/frontend_dist"))
+if _static_dir.is_dir():
+    app.mount(
+        "/assets",
+        StaticFiles(directory=_static_dir / "assets"),
+        name="assets",
+    )
+
+    _index_file = _static_dir / "index.html"
+
+    @app.get("/", include_in_schema=False)
+    def _serve_index():
+        return FileResponse(_index_file)
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    def _spa_fallback(full_path: str):
+        # API routes are registered above; anything else falls back to index.html
+        # so client-side routing works.
+        if full_path.startswith("api/"):
+            raise HTTPException(404)
+        candidate = _static_dir / full_path
+        if candidate.is_file():
+            return FileResponse(candidate)
+        return FileResponse(_index_file)

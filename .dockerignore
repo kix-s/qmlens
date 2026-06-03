@@ -6,3 +6,5 @@
 **/.git
 **/dist
 **/.vite
+.github
+vmql-journey
