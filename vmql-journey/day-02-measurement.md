@@ -82,35 +82,37 @@ always between `−1` and `+1`.
 
 ## In QMLens
 
-Under each qubit node in the **Qubit Correlation Graph**, you will see a
-value such as:
+In the **Qubit Correlation Graph**, each qubit is drawn as a circle with
+a small arrow inside it — a tiny **Bloch-style needle** that shows the
+qubit's `⟨Z⟩` value:
 
-```text
-⟨Z⟩ = 0.21
-```
+| Arrow direction | `⟨Z⟩` | Interpretation |
+|---|---|---|
+| Straight **up** | `+1` | Always measured as `0` |
+| Tilted upward | between `0` and `+1` | More likely to be measured as `0` |
+| **Horizontal** (along the dashed equator) | `0` | 50 / 50 between `0` and `1` |
+| Tilted downward | between `−1` and `0` | More likely to be measured as `1` |
+| Straight **down** | `−1` | Always measured as `1` |
 
-Read it like this:
+The circle's color (blue ↔ red) reinforces the same value, and hovering
+the node shows the exact number, e.g. `⟨Z₀⟩ = 0.213`.
 
-| `⟨Z⟩` | Interpretation |
-|---|---|
-| `+0.9` to `+1.0` | Almost always measured as `0` |
-| `+0.1` to `+0.5` | More likely to be measured as `0` |
-| Around `0` | Approximately 50/50 between `0` and `1` |
-| `−0.1` to `−0.5` | More likely to be measured as `1` |
-| `−0.9` to `−1.0` | Almost always measured as `1` |
+Read the arrow like the needle of a tilting compass: **up = 0-ish,
+horizontal = undecided, down = 1-ish.**
 
 Try this:
 
 1. Train the model using the default settings.
-2. Drag the **epoch slider** to epoch `0`.
-3. Look at the `⟨Z⟩` value for `q0`.
-4. Slide to the final epoch and look again.
+2. Drag the **epoch slider** to epoch `0`. Notice the arrow direction on
+   `q0`.
+3. Slide to the final epoch and look at `q0` again.
 
-Did the value change?
+Did the arrow rotate?
 
 During training, the model adjusts the operations in the circuit. These
 changes affect the qubit states and therefore change the measurement
-statistics. We will learn how those operations work starting on Day 3.
+statistics — and the arrow tilts accordingly. We will learn how those
+operations work starting on Day 3.
 
 ## Checkpoint
 
@@ -129,9 +131,9 @@ statistics. We will learn how those operations work starting on Day 3.
 
 ## Stretch
 
-Compare the `⟨Z⟩` values for `q0` and `q3`.
+Compare the arrows on `q0` and `q3`.
 
-Do they behave differently as training progresses? Which qubit do you
+Do they rotate differently as training progresses? Which qubit do you
 think the model uses to make its final prediction?
 
 For now, treat this as a hypothesis. We will confirm the answer on Day 9.
